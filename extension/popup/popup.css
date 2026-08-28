@@ -1,0 +1,135 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  width: 280px;
+  font-family: system-ui, -apple-system, sans-serif;
+  background: #1a1a2e;
+  color: #e0e0e0;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 18px;
+  gap: 12px;
+}
+
+h1 {
+  font-size: 15px;
+  letter-spacing: 1px;
+  color: #fff;
+}
+
+.btn {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 3px solid;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn.off {
+  background: #2a2a3e;
+  border-color: #555;
+  color: #888;
+}
+
+.btn.on {
+  background: #16a34a;
+  border-color: #22c55e;
+  color: #fff;
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
+}
+
+.profile-info {
+  width: 100%;
+  background: #16163a;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 11px;
+}
+
+.profile-info.hidden {
+  display: none;
+}
+
+.info-row {
+  display: flex;
+  gap: 8px;
+  padding: 3px 0;
+  border-bottom: 1px solid #2a2a4e;
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.label {
+  color: #22c55e;
+  font-weight: 600;
+  min-width: 55px;
+  flex-shrink: 0;
+}
+
+.value {
+  color: #aaa;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.btn-details {
+  display: block;
+  margin: 6px auto 0;
+  background: none;
+  border: none;
+  color: #556;
+  font-size: 10px;
+  cursor: pointer;
+  padding: 2px 8px;
+  border-radius: 4px;
+  transition: color 0.15s;
+}
+
+.btn-details:hover {
+  color: #22c55e;
+}
+
+.full-details {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid #2a2a4e;
+}
+
+.full-details.hidden {
+  display: none;
+}
+
+.btn-secondary {
+  background: #2a2a3e;
+  border: 1px solid #444;
+  color: #ccc;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-secondary:hover {
+  background: #3a3a5e;
+  border-color: #22c55e;
+  color: #fff;
+}
+
+.btn-secondary.hidden {
+  display: none;
+}

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Are you a fridge ?</h1>
+    <button id="toggle-btn" class="btn off">No</button>
+
+    <div id="profile-info" class="profile-info hidden">
+      <div class="info-row"><span class="label">UA</span><span id="info-ua" class="value"></span></div>
+      <div class="info-row"><span class="label">Lang</span><span id="info-lang" class="value"></span></div>
+      <div class="info-row"><span class="label">Screen</span><span id="info-screen" class="value"></span></div>
+      <div class="info-row"><span class="label">GPU</span><span id="info-gpu" class="value"></span></div>
+      <div class="info-row"><span class="label">TZ</span><span id="info-tz" class="value"></span></div>
+      <div class="info-row"><span class="label">Cores</span><span id="info-cores" class="value"></span></div>
+
+      <button id="details-toggle" class="btn-details">details</button>
+      <div id="full-details" class="full-details hidden">
+        <div class="info-row"><span class="label">Platform</span><span id="info-platform" class="value"></span></div>
+        <div class="info-row"><span class="label">Vendor</span><span id="info-vendor" class="value"></span></div>
+        <div class="info-row"><span class="label">Product</span><span id="info-product" class="value"></span></div>
+        <div class="info-row"><span class="label">BuildID</span><span id="info-buildid" class="value"></span></div>
+        <div class="info-row"><span class="label">DNT</span><span id="info-dnt" class="value"></span></div>
+        <div class="info-row"><span class="label">DevMem</span><span id="info-devmem" class="value"></span></div>
+        <div class="info-row"><span class="label">Languages</span><span id="info-languages" class="value"></span></div>
+        <div class="info-row"><span class="label">Avail</span><span id="info-avail" class="value"></span></div>
+        <div class="info-row"><span class="label">Depth</span><span id="info-depth" class="value"></span></div>
+        <div class="info-row"><span class="label">GL Vendor</span><span id="info-glvendor" class="value"></span></div>
+        <div class="info-row"><span class="label">GL Render</span><span id="info-glrender" class="value"></span></div>
+        <div class="info-row"><span class="label">TZ Offset</span><span id="info-tzoffset" class="value"></span></div>
+        <div class="info-row"><span class="label">AcceptLang</span><span id="info-acceptlang" class="value"></span></div>
+        <div class="info-row"><span class="label">Canvas</span><span id="info-canvas" class="value"></span></div>
+        <div class="info-row"><span class="label">Audio</span><span id="info-audio" class="value"></span></div>
+      </div>
+    </div>
+
+    <button id="new-session-btn" class="btn-secondary hidden">New Identity</button>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>
