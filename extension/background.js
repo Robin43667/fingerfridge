@@ -1,14 +1,18 @@
 // Current session profile (generated on extension load or toggle)
 let currentProfile = null;
+let currentIdentity = null;
 let enabled = false;
 
 // Initialize state from storage
-browser.storage.local.get({ enabled: false, profile: null }).then((data) => {
+browser.storage.local.get({ enabled: false, profile: null, identity: null }).then((data) => {
   enabled = data.enabled;
   if (enabled && data.profile) {
     currentProfile = data.profile;
   } else if (enabled) {
     newSession();
+  }
+  if (data.identity) {
+    currentIdentity = data.identity;
   }
 });
 
@@ -71,5 +75,15 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   if (message.action === "getProfile") {
     return Promise.resolve(currentProfile);
+  }
+
+  if (message.action === "generateIdentity") {
+    currentIdentity = generateIdentity();
+    browser.storage.local.set({ identity: currentIdentity });
+    return Promise.resolve(currentIdentity);
+  }
+
+  if (message.action === "getIdentity") {
+    return Promise.resolve(currentIdentity);
   }
 });

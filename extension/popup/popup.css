@@ -133,3 +133,69 @@ h1 {
 .btn-secondary.hidden {
   display: none;
 }
+
+.separator {
+  width: 100%;
+  height: 1px;
+  background: #2a2a4e;
+  margin: 4px 0;
+}
+
+h2 {
+  font-size: 13px;
+  letter-spacing: 1px;
+  color: #c084fc;
+}
+
+.identity-info {
+  width: 100%;
+  background: #1a1632;
+  border: 1px solid #2a2a4e;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 11px;
+}
+
+.identity-info.hidden {
+  display: none;
+}
+
+.identity-row {
+  display: flex;
+  gap: 8px;
+  padding: 3px 0;
+  border-bottom: 1px solid #2a2a4e;
+}
+
+.identity-row:last-child {
+  border-bottom: none;
+}
+
+.identity-row .label {
+  color: #c084fc;
+}
+
+.universe-tag {
+  color: #666 !important;
+  font-style: italic;
+}
+
+.copiable {
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.copiable:hover {
+  color: #c084fc !important;
+}
+
+.copiable.copied {
+  color: #22c55e !important;
+}
+
+.copy-hint {
+  text-align: center;
+  color: #444;
+  font-size: 9px;
+  margin-top: 6px;
+}

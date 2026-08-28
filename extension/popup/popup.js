@@ -78,3 +78,46 @@ detailsToggle.addEventListener("click", () => {
   const isHidden = fullDetails.classList.toggle("hidden");
   detailsToggle.textContent = isHidden ? "details" : "hide";
 });
+
+// --- Fake Identity ---
+const genIdentityBtn = document.getElementById("gen-identity-btn");
+const identityInfo = document.getElementById("identity-info");
+
+function updateIdentityUI(identity) {
+  if (!identity) {
+    identityInfo.classList.add("hidden");
+    return;
+  }
+  identityInfo.classList.remove("hidden");
+  document.getElementById("id-name").textContent = `${identity.firstName} ${identity.lastName}`;
+  document.getElementById("id-universe").textContent = identity.universe;
+  document.getElementById("id-email").textContent = identity.email;
+  document.getElementById("id-phone").textContent = identity.phone;
+  document.getElementById("id-address").textContent = identity.street;
+  document.getElementById("id-city").textContent = identity.city;
+  document.getElementById("id-zip").textContent = identity.zip;
+}
+
+genIdentityBtn.addEventListener("click", () => {
+  browser.runtime.sendMessage({ action: "generateIdentity" }).then(updateIdentityUI);
+});
+
+// Load saved identity on popup open
+browser.runtime.sendMessage({ action: "getIdentity" }).then((identity) => {
+  if (identity) updateIdentityUI(identity);
+});
+
+// Copy to clipboard on click
+identityInfo.addEventListener("click", (e) => {
+  const target = e.target.closest(".copiable");
+  if (!target) return;
+  navigator.clipboard.writeText(target.textContent).then(() => {
+    target.classList.add("copied");
+    const original = target.textContent;
+    target.textContent = "copied!";
+    setTimeout(() => {
+      target.textContent = original;
+      target.classList.remove("copied");
+    }, 800);
+  });
+});

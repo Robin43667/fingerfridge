@@ -21,7 +21,7 @@
   ],
   "host_permissions": ["<all_urls>"],
   "background": {
-    "scripts": ["profiles.js", "background.js"]
+    "scripts": ["profiles.js", "identities.js", "background.js"]
   },
   "content_scripts": [
     {

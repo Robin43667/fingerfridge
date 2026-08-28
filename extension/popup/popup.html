@@ -38,6 +38,43 @@
     </div>
 
     <button id="new-session-btn" class="btn-secondary hidden">New Identity</button>
+
+    <div class="separator"></div>
+
+    <h2>Fake ID</h2>
+    <button id="gen-identity-btn" class="btn-secondary">Generate</button>
+
+    <div id="identity-info" class="identity-info hidden">
+      <div class="identity-row">
+        <span class="label">Name</span>
+        <span id="id-name" class="value copiable"></span>
+      </div>
+      <div class="identity-row">
+        <span class="label">From</span>
+        <span id="id-universe" class="value universe-tag"></span>
+      </div>
+      <div class="identity-row">
+        <span class="label">Email</span>
+        <span id="id-email" class="value copiable"></span>
+      </div>
+      <div class="identity-row">
+        <span class="label">Phone</span>
+        <span id="id-phone" class="value copiable"></span>
+      </div>
+      <div class="identity-row">
+        <span class="label">Address</span>
+        <span id="id-address" class="value copiable"></span>
+      </div>
+      <div class="identity-row">
+        <span class="label">City</span>
+        <span id="id-city" class="value copiable"></span>
+      </div>
+      <div class="identity-row">
+        <span class="label">Zip</span>
+        <span id="id-zip" class="value copiable"></span>
+      </div>
+      <div class="copy-hint">click any value to copy</div>
+    </div>
   </div>
   <script src="popup.js"></script>
 </body>
