@@ -138,6 +138,12 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return Promise.resolve(currentIdentity);
   }
 
+  if (message.action === "clearIdentity") {
+    currentIdentity = null;
+    browser.storage.local.remove("identity");
+    return Promise.resolve({ success: true });
+  }
+
   // --- Mailbox ---
   if (message.action === "createMailbox") {
     return (async () => {

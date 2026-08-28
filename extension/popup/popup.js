@@ -3,10 +3,15 @@ const profileInfo = document.getElementById("profile-info");
 const newSessionBtn = document.getElementById("new-session-btn");
 const detailsToggle = document.getElementById("details-toggle");
 const fullDetails = document.getElementById("full-details");
+const reloadAllBtn = document.getElementById("reload-all-btn");
+const clearAllBtn = document.getElementById("clear-all-btn");
 
 function updateUI({ enabled, profile }) {
   btn.textContent = enabled ? "Yes" : "No";
   btn.className = enabled ? "btn on" : "btn off";
+
+  reloadAllBtn.classList.toggle("hidden", !enabled);
+  clearAllBtn.classList.toggle("hidden", !enabled);
 
   if (enabled && profile) {
     profileInfo.classList.remove("hidden");
@@ -65,12 +70,49 @@ browser.runtime.sendMessage({ action: "getStatus" }).then(updateUI);
 
 // Toggle protection
 btn.addEventListener("click", () => {
+  const willEnable = btn.classList.contains("off");
+  btn.classList.remove("anim-on", "anim-off");
+  void btn.offsetWidth;
+  btn.classList.add(willEnable ? "anim-on" : "anim-off");
   browser.runtime.sendMessage({ action: "toggle" }).then(updateUI);
 });
 
 // New session
 newSessionBtn.addEventListener("click", () => {
   browser.runtime.sendMessage({ action: "newSession" }).then(updateUI);
+});
+
+// Reload all: new fingerprint + new identity + new mailbox
+reloadAllBtn.addEventListener("click", async () => {
+  reloadAllBtn.classList.remove("spinning");
+  void reloadAllBtn.offsetWidth;
+  reloadAllBtn.classList.add("spinning");
+  // New fingerprint
+  const status = await browser.runtime.sendMessage({ action: "newSession" });
+  updateUI(status);
+  // Delete old mailbox
+  await browser.runtime.sendMessage({ action: "deleteMailbox" });
+  // Generate new identity (auto-creates mailbox)
+  const identity = await browser.runtime.sendMessage({ action: "generateIdentity" });
+  updateIdentityUI(identity);
+  // Sync mailbox UI
+  const mailRes = await browser.runtime.sendMessage({ action: "getMailbox" });
+  if (mailRes.success) {
+    showMailbox(mailRes.address);
+    refreshMessages();
+  }
+});
+
+// Clear all: remove identity + mailbox, keep fingerprint
+clearAllBtn.addEventListener("click", async () => {
+  clearAllBtn.classList.remove("shrinking");
+  void clearAllBtn.offsetWidth;
+  clearAllBtn.classList.add("shrinking");
+  await browser.runtime.sendMessage({ action: "deleteMailbox" });
+  await browser.runtime.sendMessage({ action: "clearIdentity" });
+  currentIdentity = null;
+  updateIdentityUI(null);
+  hideMailbox();
 });
 
 // Expand/collapse fingerprint details

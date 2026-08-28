@@ -7,7 +7,11 @@
 <body>
   <div class="container">
     <h1>Are you a fridge ?</h1>
-    <button id="toggle-btn" class="btn off">No</button>
+    <div class="toggle-row">
+      <button id="reload-all-btn" class="btn-side btn-side-reload hidden" title="Reload all">↻</button>
+      <button id="toggle-btn" class="btn off">No</button>
+      <button id="clear-all-btn" class="btn-side btn-side-clear hidden" title="Clear identity &amp; mail">✕</button>
+    </div>
 
     <div id="profile-info" class="profile-info hidden">
       <div class="info-row"><span class="label">UA</span><span id="info-ua" class="value"></span></div>
