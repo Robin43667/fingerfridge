@@ -62,6 +62,11 @@
         <span class="label">City</span>
         <span id="id-city" class="value copiable"></span>
       </div>
+      <div class="identity-row">
+        <span class="label">Pass</span>
+        <span id="id-password" class="value copiable password-value"></span>
+        <button id="regen-password-btn" class="btn-regen" title="New password">↻</button>
+      </div>
 
       <button id="id-details-toggle" class="btn-details">show more</button>
       <div id="id-full-details" class="full-details hidden">
@@ -79,10 +84,10 @@
     <div id="mail-section" class="hidden">
       <div class="separator"></div>
 
-      <h2>Temp Mail</h2>
+      <h2 class="mail-title">Temp Mail</h2>
 
       <div id="mail-no-box" class="mail-no-box">
-        <button id="create-mail-btn" class="btn-action btn-purple">Create Mailbox</button>
+        <button id="create-mail-btn" class="btn-action btn-cyan">Create Mailbox</button>
       </div>
 
       <div id="mail-box" class="hidden">
@@ -98,7 +103,7 @@
         </div>
 
         <div id="mail-view" class="mail-view hidden">
-          <button id="mail-back-btn" class="btn-details">← back</button>
+          <button id="mail-back-btn" class="btn-back">← back to emails</button>
           <div class="mail-view-header">
             <div class="mail-view-from" id="mail-view-from"></div>
             <div class="mail-view-subject" id="mail-view-subject"></div>

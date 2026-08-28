@@ -29,6 +29,11 @@ function newSession() {
   browser.storage.local.set({ profile: currentProfile });
 }
 
+// --- Sidebar toggle via toolbar icon ---
+browser.action.onClicked.addListener(() => {
+  browser.sidebarAction.toggle();
+});
+
 // --- HTTP Header interception ---
 browser.webRequest.onBeforeSendHeaders.addListener(
   (details) => {

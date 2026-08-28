@@ -85,6 +85,15 @@ const identityInfo = document.getElementById("identity-info");
 const idDetailsToggle = document.getElementById("id-details-toggle");
 const idFullDetails = document.getElementById("id-full-details");
 const mailSection = document.getElementById("mail-section");
+const passwordEl = document.getElementById("id-password");
+const regenPasswordBtn = document.getElementById("regen-password-btn");
+
+function generatePassword() {
+  const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%&*_+-=?";
+  const arr = new Uint8Array(23);
+  crypto.getRandomValues(arr);
+  return Array.from(arr, (b) => chars[b % chars.length]).join("");
+}
 
 function updateIdentityUI(identity) {
   if (!identity) {
@@ -101,7 +110,15 @@ function updateIdentityUI(identity) {
   document.getElementById("id-address").textContent = identity.street;
   document.getElementById("id-city").textContent = identity.city;
   document.getElementById("id-zip").textContent = identity.zip;
+  passwordEl.textContent = generatePassword();
 }
+
+regenPasswordBtn.addEventListener("click", () => {
+  passwordEl.textContent = generatePassword();
+  regenPasswordBtn.classList.remove("spinning");
+  void regenPasswordBtn.offsetWidth; // force reflow
+  regenPasswordBtn.classList.add("spinning");
+});
 
 // Expand/collapse identity details
 idDetailsToggle.addEventListener("click", () => {
@@ -239,14 +256,31 @@ async function openMessage(id) {
   mailViewSubject.textContent = msg.subject || "(no subject)";
   mailViewDate.textContent = formatDate(msg.createdAt);
 
-  // Prefer HTML content, fall back to text
-  if (msg.html && msg.html.length > 0) {
+  // Get HTML content (mail.tm returns html as array or string)
+  let html = msg.html;
+  if (Array.isArray(html)) html = html.join("");
+
+  if (html && html.length > 0) {
     // Sanitize: strip scripts, keep basic formatting
-    const cleaned = msg.html
+    const cleaned = html
       .replace(/<script[\s\S]*?<\/script>/gi, "")
       .replace(/on\w+="[^"]*"/gi, "")
       .replace(/on\w+='[^']*'/gi, "");
-    mailViewBody.innerHTML = cleaned;
+    // Use iframe for proper HTML email rendering
+    mailViewBody.innerHTML = "";
+    const iframe = document.createElement("iframe");
+    iframe.sandbox = "allow-same-origin";
+    iframe.style.cssText = "width:100%;border:none;background:#fff;";
+    mailViewBody.appendChild(iframe);
+    iframe.contentDocument.open();
+    iframe.contentDocument.write(cleaned);
+    iframe.contentDocument.close();
+    // Auto-resize iframe to fit content
+    const resize = () => {
+      iframe.style.height = iframe.contentDocument.body.scrollHeight + "px";
+    };
+    iframe.onload = resize;
+    setTimeout(resize, 200);
   } else {
     mailViewBody.textContent = msg.text || "(empty)";
   }
@@ -273,6 +307,11 @@ createMailBtn.addEventListener("click", async () => {
   if (res.success) {
     showMailbox(res.address);
     refreshMessages();
+    // Update email in fake ID section
+    const emailEl = document.getElementById("id-email");
+    if (emailEl && identityInfo.classList.contains("hidden") === false) {
+      emailEl.textContent = res.address;
+    }
   } else {
     showMailError(res.error);
   }
