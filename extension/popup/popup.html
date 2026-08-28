@@ -17,7 +17,7 @@
       <div class="info-row"><span class="label">TZ</span><span id="info-tz" class="value"></span></div>
       <div class="info-row"><span class="label">Cores</span><span id="info-cores" class="value"></span></div>
 
-      <button id="details-toggle" class="btn-details">details</button>
+      <button id="details-toggle" class="btn-details">show more</button>
       <div id="full-details" class="full-details hidden">
         <div class="info-row"><span class="label">Platform</span><span id="info-platform" class="value"></span></div>
         <div class="info-row"><span class="label">Vendor</span><span id="info-vendor" class="value"></span></div>
@@ -37,29 +37,22 @@
       </div>
     </div>
 
-    <button id="new-session-btn" class="btn-secondary hidden">New Identity</button>
+    <button id="new-session-btn" class="btn-action btn-green hidden">New Identity</button>
 
     <div class="separator"></div>
 
     <h2>Fake ID</h2>
-    <button id="gen-identity-btn" class="btn-secondary">Generate</button>
+    <button id="gen-identity-btn" class="btn-action btn-purple">Generate</button>
 
     <div id="identity-info" class="identity-info hidden">
       <div class="identity-row">
         <span class="label">Name</span>
         <span id="id-name" class="value copiable"></span>
-      </div>
-      <div class="identity-row">
-        <span class="label">From</span>
         <span id="id-universe" class="value universe-tag"></span>
       </div>
       <div class="identity-row">
         <span class="label">Email</span>
         <span id="id-email" class="value copiable"></span>
-      </div>
-      <div class="identity-row">
-        <span class="label">Phone</span>
-        <span id="id-phone" class="value copiable"></span>
       </div>
       <div class="identity-row">
         <span class="label">Address</span>
@@ -69,11 +62,54 @@
         <span class="label">City</span>
         <span id="id-city" class="value copiable"></span>
       </div>
-      <div class="identity-row">
-        <span class="label">Zip</span>
-        <span id="id-zip" class="value copiable"></span>
+
+      <button id="id-details-toggle" class="btn-details">show more</button>
+      <div id="id-full-details" class="full-details hidden">
+        <div class="identity-row">
+          <span class="label">Phone</span>
+          <span id="id-phone" class="value copiable"></span>
+        </div>
+        <div class="identity-row">
+          <span class="label">Zip</span>
+          <span id="id-zip" class="value copiable"></span>
+        </div>
       </div>
-      <div class="copy-hint">click any value to copy</div>
+    </div>
+
+    <div id="mail-section" class="hidden">
+      <div class="separator"></div>
+
+      <h2>Temp Mail</h2>
+
+      <div id="mail-no-box" class="mail-no-box">
+        <button id="create-mail-btn" class="btn-action btn-purple">Create Mailbox</button>
+      </div>
+
+      <div id="mail-box" class="hidden">
+        <div class="mail-address-bar">
+          <span id="mail-address" class="mail-address copiable"></span>
+          <button id="mail-refresh-btn" class="btn-icon" title="Refresh">↻</button>
+          <button id="mail-delete-btn" class="btn-icon btn-icon-danger" title="Delete mailbox">✕</button>
+        </div>
+
+        <div id="mail-inbox" class="mail-inbox">
+          <div id="mail-empty" class="mail-empty">No messages yet</div>
+          <div id="mail-list"></div>
+        </div>
+
+        <div id="mail-view" class="mail-view hidden">
+          <button id="mail-back-btn" class="btn-details">← back</button>
+          <div class="mail-view-header">
+            <div class="mail-view-from" id="mail-view-from"></div>
+            <div class="mail-view-subject" id="mail-view-subject"></div>
+            <div class="mail-view-date" id="mail-view-date"></div>
+          </div>
+          <div class="mail-view-body" id="mail-view-body"></div>
+        </div>
+      </div>
+
+      <div id="mail-loading" class="mail-loading hidden">Loading...</div>
+      <div id="mail-error" class="mail-error hidden"></div>
     </div>
   </div>
   <script src="popup.js"></script>

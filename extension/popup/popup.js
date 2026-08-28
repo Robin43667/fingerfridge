@@ -73,24 +73,29 @@ newSessionBtn.addEventListener("click", () => {
   browser.runtime.sendMessage({ action: "newSession" }).then(updateUI);
 });
 
-// Expand/collapse details
+// Expand/collapse fingerprint details
 detailsToggle.addEventListener("click", () => {
   const isHidden = fullDetails.classList.toggle("hidden");
-  detailsToggle.textContent = isHidden ? "details" : "hide";
+  detailsToggle.textContent = isHidden ? "show more" : "hide";
 });
 
 // --- Fake Identity ---
 const genIdentityBtn = document.getElementById("gen-identity-btn");
 const identityInfo = document.getElementById("identity-info");
+const idDetailsToggle = document.getElementById("id-details-toggle");
+const idFullDetails = document.getElementById("id-full-details");
+const mailSection = document.getElementById("mail-section");
 
 function updateIdentityUI(identity) {
   if (!identity) {
     identityInfo.classList.add("hidden");
+    mailSection.classList.add("hidden");
     return;
   }
   identityInfo.classList.remove("hidden");
+  mailSection.classList.remove("hidden");
   document.getElementById("id-name").textContent = `${identity.firstName} ${identity.lastName}`;
-  document.getElementById("id-universe").textContent = identity.universe;
+  document.getElementById("id-universe").textContent = `(${identity.universe})`;
   document.getElementById("id-email").textContent = identity.email;
   document.getElementById("id-phone").textContent = identity.phone;
   document.getElementById("id-address").textContent = identity.street;
@@ -98,8 +103,21 @@ function updateIdentityUI(identity) {
   document.getElementById("id-zip").textContent = identity.zip;
 }
 
-genIdentityBtn.addEventListener("click", () => {
-  browser.runtime.sendMessage({ action: "generateIdentity" }).then(updateIdentityUI);
+// Expand/collapse identity details
+idDetailsToggle.addEventListener("click", () => {
+  const isHidden = idFullDetails.classList.toggle("hidden");
+  idDetailsToggle.textContent = isHidden ? "show more" : "hide";
+});
+
+genIdentityBtn.addEventListener("click", async () => {
+  const identity = await browser.runtime.sendMessage({ action: "generateIdentity" });
+  updateIdentityUI(identity);
+  // Sync mailbox UI — a mailbox may have been auto-created
+  const mailRes = await browser.runtime.sendMessage({ action: "getMailbox" });
+  if (mailRes.success) {
+    showMailbox(mailRes.address);
+    refreshMessages();
+  }
 });
 
 // Load saved identity on popup open
@@ -107,8 +125,8 @@ browser.runtime.sendMessage({ action: "getIdentity" }).then((identity) => {
   if (identity) updateIdentityUI(identity);
 });
 
-// Copy to clipboard on click
-identityInfo.addEventListener("click", (e) => {
+// Copy to clipboard on click (shared handler)
+document.addEventListener("click", (e) => {
   const target = e.target.closest(".copiable");
   if (!target) return;
   navigator.clipboard.writeText(target.textContent).then(() => {
@@ -120,4 +138,172 @@ identityInfo.addEventListener("click", (e) => {
       target.classList.remove("copied");
     }, 800);
   });
+});
+
+// --- Temp Mail ---
+const createMailBtn = document.getElementById("create-mail-btn");
+const mailNoBox = document.getElementById("mail-no-box");
+const mailBox = document.getElementById("mail-box");
+const mailAddress = document.getElementById("mail-address");
+const mailRefreshBtn = document.getElementById("mail-refresh-btn");
+const mailDeleteBtn = document.getElementById("mail-delete-btn");
+const mailInbox = document.getElementById("mail-inbox");
+const mailEmpty = document.getElementById("mail-empty");
+const mailList = document.getElementById("mail-list");
+const mailView = document.getElementById("mail-view");
+const mailBackBtn = document.getElementById("mail-back-btn");
+const mailViewFrom = document.getElementById("mail-view-from");
+const mailViewSubject = document.getElementById("mail-view-subject");
+const mailViewDate = document.getElementById("mail-view-date");
+const mailViewBody = document.getElementById("mail-view-body");
+const mailLoading = document.getElementById("mail-loading");
+const mailError = document.getElementById("mail-error");
+
+function showMailLoading(show) {
+  mailLoading.classList.toggle("hidden", !show);
+}
+
+function showMailError(msg) {
+  if (msg) {
+    mailError.textContent = msg;
+    mailError.classList.remove("hidden");
+  } else {
+    mailError.classList.add("hidden");
+  }
+}
+
+function showMailbox(address) {
+  mailNoBox.classList.add("hidden");
+  mailBox.classList.remove("hidden");
+  mailAddress.textContent = address;
+}
+
+function hideMailbox() {
+  mailNoBox.classList.remove("hidden");
+  mailBox.classList.add("hidden");
+  mailView.classList.add("hidden");
+  mailList.innerHTML = "";
+  mailEmpty.style.display = "";
+}
+
+function formatDate(iso) {
+  const d = new Date(iso);
+  const now = new Date();
+  const diff = now - d;
+  if (diff < 60000) return "just now";
+  if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
+  if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+}
+
+function renderMessages(messages) {
+  mailList.innerHTML = "";
+  if (!messages || messages.length === 0) {
+    mailEmpty.style.display = "";
+    return;
+  }
+  mailEmpty.style.display = "none";
+  for (const msg of messages) {
+    const item = document.createElement("div");
+    item.className = `mail-item${msg.seen ? "" : " unread"}`;
+    item.dataset.id = msg.id;
+    item.innerHTML = `
+      <span class="mail-item-from">${escapeHtml(msg.from?.address || "unknown")}</span>
+      <span class="mail-item-subject">${escapeHtml(msg.subject || "(no subject)")}</span>
+      <span class="mail-item-date">${formatDate(msg.createdAt)}</span>
+    `;
+    item.addEventListener("click", () => openMessage(msg.id));
+    mailList.appendChild(item);
+  }
+}
+
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+async function openMessage(id) {
+  showMailLoading(true);
+  showMailError(null);
+  const res = await browser.runtime.sendMessage({ action: "getMessage", id });
+  showMailLoading(false);
+  if (!res.success) {
+    showMailError(res.error);
+    return;
+  }
+  const msg = res.message;
+  mailInbox.classList.add("hidden");
+  mailView.classList.remove("hidden");
+  mailViewFrom.textContent = msg.from?.address || "unknown";
+  mailViewSubject.textContent = msg.subject || "(no subject)";
+  mailViewDate.textContent = formatDate(msg.createdAt);
+
+  // Prefer HTML content, fall back to text
+  if (msg.html && msg.html.length > 0) {
+    // Sanitize: strip scripts, keep basic formatting
+    const cleaned = msg.html
+      .replace(/<script[\s\S]*?<\/script>/gi, "")
+      .replace(/on\w+="[^"]*"/gi, "")
+      .replace(/on\w+='[^']*'/gi, "");
+    mailViewBody.innerHTML = cleaned;
+  } else {
+    mailViewBody.textContent = msg.text || "(empty)";
+  }
+}
+
+async function refreshMessages() {
+  showMailLoading(true);
+  showMailError(null);
+  const res = await browser.runtime.sendMessage({ action: "getMessages" });
+  showMailLoading(false);
+  if (!res.success) {
+    showMailError(res.error);
+    return;
+  }
+  renderMessages(res.messages);
+}
+
+// Create mailbox
+createMailBtn.addEventListener("click", async () => {
+  showMailLoading(true);
+  showMailError(null);
+  const res = await browser.runtime.sendMessage({ action: "createMailbox" });
+  showMailLoading(false);
+  if (res.success) {
+    showMailbox(res.address);
+    refreshMessages();
+  } else {
+    showMailError(res.error);
+  }
+});
+
+// Refresh
+mailRefreshBtn.addEventListener("click", () => {
+  mailView.classList.add("hidden");
+  mailInbox.classList.remove("hidden");
+  refreshMessages();
+});
+
+// Back from message view
+mailBackBtn.addEventListener("click", () => {
+  mailView.classList.add("hidden");
+  mailInbox.classList.remove("hidden");
+  refreshMessages();
+});
+
+// Delete mailbox
+mailDeleteBtn.addEventListener("click", async () => {
+  showMailLoading(true);
+  await browser.runtime.sendMessage({ action: "deleteMailbox" });
+  showMailLoading(false);
+  hideMailbox();
+});
+
+// Load existing mailbox on popup open
+browser.runtime.sendMessage({ action: "getMailbox" }).then((res) => {
+  if (res.success) {
+    showMailbox(res.address);
+    refreshMessages();
+  }
 });
