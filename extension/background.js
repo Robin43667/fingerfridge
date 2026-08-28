@@ -6,11 +6,26 @@ let enabled = false;
 // Mailbox state
 let mailbox = null; // { address, password, token, id }
 
+// Settings
+let settings = {
+  forceEnglish: true,
+  autoRenew: true,
+  persist: false,
+  historyEnabled: false,
+};
+let identityHistory = []; // last N identities
+const MAX_HISTORY = 20;
+let autoRenewTimer = null;
+
 const MAIL_API = "https://api.mail.tm";
 
 // Initialize state from storage
-browser.storage.local.get({ enabled: false, profile: null, identity: null, mailbox: null }).then((data) => {
+browser.storage.local.get({ enabled: false, profile: null, identity: null, mailbox: null, settings: null, identityHistory: [] }).then((data) => {
   enabled = data.enabled;
+  if (data.settings) {
+    settings = { ...settings, ...data.settings };
+  }
+  identityHistory = data.identityHistory || [];
   if (enabled && data.profile) {
     currentProfile = data.profile;
   } else if (enabled) {
@@ -22,11 +37,40 @@ browser.storage.local.get({ enabled: false, profile: null, identity: null, mailb
   if (data.mailbox) {
     mailbox = data.mailbox;
   }
+  if (settings.autoRenew && enabled) {
+    startAutoRenew();
+  }
 });
 
 function newSession() {
-  currentProfile = generateProfile();
+  currentProfile = generateProfile(settings);
   browser.storage.local.set({ profile: currentProfile });
+}
+
+function generateSecurePassword() {
+  const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%&*_+-=?";
+  const arr = new Uint8Array(23);
+  crypto.getRandomValues(arr);
+  return Array.from(arr, (b) => chars[b % chars.length]).join("");
+}
+
+function startAutoRenew() {
+  stopAutoRenew();
+  autoRenewTimer = setInterval(() => {
+    if (enabled) newSession();
+  }, 60000);
+}
+
+function stopAutoRenew() {
+  if (autoRenewTimer) {
+    clearInterval(autoRenewTimer);
+    autoRenewTimer = null;
+  }
+}
+
+// Clear non-persistent data on browser startup if persist is off
+if (!settings.persist) {
+  browser.storage.local.remove(["profile", "identity", "mailbox", "identityHistory"]);
 }
 
 // --- Sidebar toggle via toolbar icon ---
@@ -129,7 +173,25 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
       if (mailbox) {
         currentIdentity.email = mailbox.address;
       }
+      // Generate password
+      currentIdentity.password = generateSecurePassword();
       browser.storage.local.set({ identity: currentIdentity });
+
+      // Save to history if enabled
+      if (settings.historyEnabled) {
+        identityHistory.unshift({
+          name: `${currentIdentity.firstName} ${currentIdentity.lastName}`,
+          email: currentIdentity.email,
+          password: currentIdentity.password,
+          universe: currentIdentity.universe,
+          date: new Date().toISOString(),
+        });
+        if (identityHistory.length > MAX_HISTORY) {
+          identityHistory = identityHistory.slice(0, MAX_HISTORY);
+        }
+        browser.storage.local.set({ identityHistory });
+      }
+
       return currentIdentity;
     })();
   }
@@ -257,5 +319,45 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
       browser.storage.local.remove("mailbox");
       return { success: true };
     })();
+  }
+
+  // --- Settings ---
+  if (message.action === "getSettings") {
+    return Promise.resolve({ settings, identityHistory });
+  }
+
+  if (message.action === "updateSettings") {
+    const prev = { ...settings };
+    settings = { ...settings, ...message.settings };
+    browser.storage.local.set({ settings });
+
+    // Handle auto-renew toggle
+    if (settings.autoRenew && enabled) {
+      startAutoRenew();
+    } else {
+      stopAutoRenew();
+    }
+
+    // Handle persist toggle — if turned off, clear stored data
+    if (prev.persist && !settings.persist) {
+      browser.storage.local.remove(["profile", "identity", "mailbox", "identityHistory"]);
+    }
+
+    // Handle force-english: regenerate profile if enabled
+    if (settings.forceEnglish !== prev.forceEnglish && enabled) {
+      newSession();
+    }
+
+    return Promise.resolve({ success: true, profile: currentProfile });
+  }
+
+  if (message.action === "getHistory") {
+    return Promise.resolve(identityHistory);
+  }
+
+  if (message.action === "clearHistory") {
+    identityHistory = [];
+    browser.storage.local.set({ identityHistory });
+    return Promise.resolve({ success: true });
   }
 });

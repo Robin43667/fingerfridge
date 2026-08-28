@@ -350,11 +350,12 @@ const TIMEZONES = [
 ];
 
 // Generate a complete coherent session profile
-function generateProfile() {
+function generateProfile(opts = {}) {
   const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
   const browser = pick(PROFILES);
-  const lang = pick(LANGUAGES);
+  const ENGLISH_LANGS = LANGUAGES.filter((l) => l.primary.startsWith("en"));
+  const lang = opts.forceEnglish ? pick(ENGLISH_LANGS) : pick(LANGUAGES);
   const screen = pick(SCREENS);
   const webgl = pick(WEBGL_PROFILES);
   const tz = pick(TIMEZONES);

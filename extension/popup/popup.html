@@ -6,7 +6,12 @@
 </head>
 <body>
   <div class="container">
-    <h1>Are you a fridge ?</h1>
+    <div class="header-row">
+      <button id="settings-back-btn" class="btn-header-left hidden" title="Back">&#8592;</button>
+      <h1>Are you a fridge ?</h1>
+      <button id="settings-btn" class="btn-gear" title="Settings">&#9881;</button>
+    </div>
+    <div id="main-view">
     <div class="toggle-row">
       <button id="reload-all-btn" class="btn-side btn-side-reload hidden" title="Reload all">↻</button>
       <button id="toggle-btn" class="btn off">No</button>
@@ -120,6 +125,51 @@
       <div id="mail-loading" class="mail-loading hidden">Loading...</div>
       <div id="mail-error" class="mail-error hidden"></div>
     </div>
+    </div><!-- /main-view -->
+
+    <div id="settings-view" class="settings-view hidden">
+      <div class="settings-group">
+        <h3 class="settings-group-title">Fingerprint</h3>
+        <label class="setting-row">
+          <span class="setting-label">Force English language</span>
+          <input type="checkbox" id="opt-force-english" class="setting-toggle" checked>
+        </label>
+        <label class="setting-row">
+          <span class="setting-label">Auto-renew every minute</span>
+          <input type="checkbox" id="opt-auto-renew" class="setting-toggle" checked>
+        </label>
+        <div id="auto-renew-bar-wrap" class="auto-renew-bar-wrap hidden">
+          <div id="auto-renew-bar" class="auto-renew-bar"></div>
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <h3 class="settings-group-title">Storage</h3>
+        <label class="setting-row">
+          <span class="setting-label">Persist data on close</span>
+          <input type="checkbox" id="opt-persist" class="setting-toggle">
+        </label>
+      </div>
+
+      <div class="settings-group">
+        <h3 class="settings-group-title">History</h3>
+        <label class="setting-row">
+          <span class="setting-label">Enable identity history</span>
+          <input type="checkbox" id="opt-history" class="setting-toggle">
+        </label>
+        <div id="history-list" class="history-list">
+          <div class="history-empty">No history yet</div>
+        </div>
+      </div>
+
+      <div class="settings-logo">
+        <img src="../icons/logo.png" alt="FingerFridge">
+        <span class="settings-logo-text">FingerFridge</span>
+        <span class="settings-logo-version">v0.2.0</span>
+        <span class="settings-logo-copy">&copy; 2026 FingerFridge - Open Source</span>
+      </div>
+    </div>
+
   </div>
   <script src="popup.js"></script>
 </body>

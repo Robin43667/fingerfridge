@@ -36,10 +36,43 @@ Includes realistic profiles (Chrome/Firefox on Windows/macOS/Linux) as well as i
 - Windows XP with Chrome 49
 - FreeBSD
 
-### Temporary Identity (coming soon)
+### Fake Identity
 
-- Disposable email address generation
-- Random identity generation (name, address, etc.)
+Generate disposable identities with fictional characters from movies, anime, games and memes:
+
+- **Name** — random fictional character with universe tag (e.g. "Gandalf Leblanc" from Lord of the Rings)
+- **Email** — linked to a real temporary mailbox (see Temp Mail below)
+- **Address & City** — humorous fictional locations (e.g. "Poudlard-sur-Mer", "Tatooine-les-Bains")
+- **Phone & Zip** — randomly generated
+- **Password** — 23-character cryptographically secure password with a regenerate button
+
+### Temp Mail
+
+Built-in disposable email powered by the mail.tm API:
+
+- Auto-created when generating a fake identity
+- Full inbox with sender, subject, date and unread indicators
+- Read HTML emails rendered in a sandboxed iframe
+- Copy address to clipboard with one click
+- Refresh inbox and delete mailbox
+- Automatic re-authentication on token expiry
+
+### Settings
+
+- **Force English language** — restrict fingerprint language to English variants (enabled by default)
+- **Auto-renew every minute** — automatically regenerate fingerprint on a 60-second cycle with visual countdown bar (enabled by default)
+- **Persist data on close** — keep or discard fingerprint, identity and mailbox data when the browser closes
+- **Identity history** — log of recent identities with name, email, password and timestamp (up to 20 entries)
+
+### UI
+
+- Persistent sidebar panel (stays open while browsing)
+- Toggle button with animated Yes/No state
+- Quick-action buttons: reload all (fingerprint + identity + mail) and clear identity/mail
+- Three color-coded sections: green (fingerprint), purple (fake ID), cyan (temp mail)
+- Copy any value to clipboard by clicking on it
+- Show more / hide toggles for detailed info
+- Settings page with custom toggle switches
 
 ## Installation
 
@@ -64,10 +97,12 @@ Includes realistic profiles (Chrome/Firefox on Windows/macOS/Linux) as well as i
 
 ## Usage
 
-1. Click the FingerFridge icon in the toolbar
+1. Click the FingerFridge icon in the toolbar to open the sidebar
 2. Press the button to toggle protection (Yes/No)
-3. Click **New Identity** to generate a fresh profile
-4. Click **details** to see all spoofed values
+3. Use the reload button to regenerate everything, or the clear button to remove identity and mail
+4. Click **Generate** to create a fake identity with a real temp mailbox
+5. Click **Create Mailbox** to add a temp email independently
+6. Open the settings via the gear icon to configure auto-renew, language, persistence and history
 
 ## Project Structure
 
@@ -75,12 +110,14 @@ Includes realistic profiles (Chrome/Firefox on Windows/macOS/Linux) as well as i
 extension/
 ├── manifest.json       Permissions and extension config (Manifest V3)
 ├── profiles.js         Browser profile data (UA, languages, screens, GPUs)
-├── background.js       HTTP header interception and session management
+├── identities.js       Fictional character database and identity generator
+├── background.js       Session management, mail API, settings and history
 ├── content.js          Injects spoofing script into page context
 ├── inject.js           JS API overrides (navigator, canvas, WebGL, audio, etc.)
 ├── icons/
 │   ├── icon-48.png
-│   └── icon-96.png
+│   ├── icon-96.png
+│   └── logo.png
 └── popup/
     ├── popup.html
     ├── popup.css

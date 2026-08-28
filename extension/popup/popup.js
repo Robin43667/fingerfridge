@@ -82,7 +82,7 @@ newSessionBtn.addEventListener("click", () => {
   browser.runtime.sendMessage({ action: "newSession" }).then(updateUI);
 });
 
-// Reload all: new fingerprint + new identity + new mailbox
+// Reload all: refresh fingerprint, and identity+mail only if they exist
 reloadAllBtn.addEventListener("click", async () => {
   reloadAllBtn.classList.remove("spinning");
   void reloadAllBtn.offsetWidth;
@@ -90,16 +90,16 @@ reloadAllBtn.addEventListener("click", async () => {
   // New fingerprint
   const status = await browser.runtime.sendMessage({ action: "newSession" });
   updateUI(status);
-  // Delete old mailbox
-  await browser.runtime.sendMessage({ action: "deleteMailbox" });
-  // Generate new identity (auto-creates mailbox)
-  const identity = await browser.runtime.sendMessage({ action: "generateIdentity" });
-  updateIdentityUI(identity);
-  // Sync mailbox UI
-  const mailRes = await browser.runtime.sendMessage({ action: "getMailbox" });
-  if (mailRes.success) {
-    showMailbox(mailRes.address);
-    refreshMessages();
+  // Only refresh identity + mail if a fake ID is already generated
+  if (!identityInfo.classList.contains("hidden")) {
+    await browser.runtime.sendMessage({ action: "deleteMailbox" });
+    const identity = await browser.runtime.sendMessage({ action: "generateIdentity" });
+    updateIdentityUI(identity);
+    const mailRes = await browser.runtime.sendMessage({ action: "getMailbox" });
+    if (mailRes.success) {
+      showMailbox(mailRes.address);
+      refreshMessages();
+    }
   }
 });
 
@@ -152,7 +152,7 @@ function updateIdentityUI(identity) {
   document.getElementById("id-address").textContent = identity.street;
   document.getElementById("id-city").textContent = identity.city;
   document.getElementById("id-zip").textContent = identity.zip;
-  passwordEl.textContent = generatePassword();
+  passwordEl.textContent = identity.password || generatePassword();
 }
 
 regenPasswordBtn.addEventListener("click", () => {
@@ -387,4 +387,143 @@ browser.runtime.sendMessage({ action: "getMailbox" }).then((res) => {
     showMailbox(res.address);
     refreshMessages();
   }
+});
+
+// --- Settings ---
+const settingsBtn = document.getElementById("settings-btn");
+const settingsView = document.getElementById("settings-view");
+const settingsBackBtn = document.getElementById("settings-back-btn");
+const mainView = document.getElementById("main-view");
+
+const optForceEnglish = document.getElementById("opt-force-english");
+const optAutoRenew = document.getElementById("opt-auto-renew");
+const optPersist = document.getElementById("opt-persist");
+const optHistory = document.getElementById("opt-history");
+const historyList = document.getElementById("history-list");
+
+// Load settings on popup open
+browser.runtime.sendMessage({ action: "getSettings" }).then(({ settings, identityHistory }) => {
+  optForceEnglish.checked = settings.forceEnglish;
+  optAutoRenew.checked = settings.autoRenew;
+  optPersist.checked = settings.persist;
+  optHistory.checked = settings.historyEnabled;
+  renderHistory(identityHistory);
+  if (settings.autoRenew && !autoRenewInterval) {
+    startAutoRenewUI();
+  }
+});
+
+function renderHistory(history) {
+  historyList.innerHTML = "";
+  if (!history || history.length === 0) {
+    historyList.innerHTML = '<div class="history-empty">No history yet</div>';
+    return;
+  }
+  for (const item of history) {
+    const el = document.createElement("div");
+    el.className = "history-item";
+    el.innerHTML = `
+      <div>
+        <span class="history-item-name">${escapeHtml(item.name)}</span>
+        <span class="history-item-email">${escapeHtml(item.email)}</span>
+        ${item.password ? `<span class="history-item-password">${escapeHtml(item.password)}</span>` : ""}
+      </div>
+      <span class="history-item-date">${formatDate(item.date)}</span>
+    `;
+    historyList.appendChild(el);
+  }
+}
+
+async function saveSetting(key, value) {
+  const res = await browser.runtime.sendMessage({
+    action: "updateSettings",
+    settings: { [key]: value },
+  });
+  // If force-english changed and profile was regenerated, update UI
+  if (key === "forceEnglish" && res.profile) {
+    updateUI({ enabled: true, profile: res.profile });
+  }
+}
+
+const autoRenewBarWrap = document.getElementById("auto-renew-bar-wrap");
+const autoRenewBar = document.getElementById("auto-renew-bar");
+let autoRenewInterval = null;
+let autoRenewTick = null;
+let autoRenewStart = 0;
+const RENEW_MS = 60000;
+
+function startAutoRenewUI() {
+  stopAutoRenewUI();
+  autoRenewBarWrap.classList.remove("hidden");
+  autoRenewStart = Date.now();
+  autoRenewBar.style.transform = "scaleX(1)";
+
+  autoRenewTick = setInterval(() => {
+    const elapsed = Date.now() - autoRenewStart;
+    const ratio = Math.max(0, 1 - elapsed / RENEW_MS);
+    autoRenewBar.style.transform = `scaleX(${ratio})`;
+  }, 200);
+
+  autoRenewInterval = setInterval(async () => {
+    autoRenewStart = Date.now();
+    autoRenewBar.style.transform = "scaleX(1)";
+    const status = await browser.runtime.sendMessage({ action: "newSession" });
+    if (status.enabled && status.profile) {
+      updateUI(status);
+    }
+  }, RENEW_MS);
+}
+
+function stopAutoRenewUI() {
+  autoRenewBarWrap.classList.add("hidden");
+  autoRenewBar.style.transform = "scaleX(1)";
+  if (autoRenewInterval) {
+    clearInterval(autoRenewInterval);
+    autoRenewInterval = null;
+  }
+  if (autoRenewTick) {
+    clearInterval(autoRenewTick);
+    autoRenewTick = null;
+  }
+}
+
+optForceEnglish.addEventListener("change", () => saveSetting("forceEnglish", optForceEnglish.checked));
+optAutoRenew.addEventListener("change", () => {
+  saveSetting("autoRenew", optAutoRenew.checked);
+  if (optAutoRenew.checked) {
+    startAutoRenewUI();
+  } else {
+    stopAutoRenewUI();
+  }
+});
+optPersist.addEventListener("change", () => saveSetting("persist", optPersist.checked));
+optHistory.addEventListener("change", () => {
+  saveSetting("historyEnabled", optHistory.checked);
+  if (!optHistory.checked) {
+    browser.runtime.sendMessage({ action: "clearHistory" });
+    renderHistory([]);
+  }
+});
+
+settingsBtn.addEventListener("click", () => {
+  settingsBtn.classList.remove("spin-gear");
+  void settingsBtn.offsetWidth;
+  settingsBtn.classList.add("spin-gear");
+  setTimeout(() => {
+    mainView.classList.add("hidden");
+    settingsView.classList.remove("hidden");
+    settingsBtn.classList.add("hidden");
+    settingsBackBtn.classList.remove("hidden");
+    document.querySelector(".header-row h1").textContent = "Fridge Settings";
+    // Refresh history
+    browser.runtime.sendMessage({ action: "getHistory" }).then(renderHistory);
+  }, 350);
+});
+
+settingsBackBtn.addEventListener("click", () => {
+  settingsView.classList.add("hidden");
+  mainView.classList.remove("hidden");
+  settingsBackBtn.classList.add("hidden");
+  settingsBtn.classList.remove("hidden");
+  document.querySelector(".header-row h1").textContent = "Are you a fridge ?";
 });
