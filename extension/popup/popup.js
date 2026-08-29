@@ -266,11 +266,16 @@ function renderMessages(messages) {
     const item = document.createElement("div");
     item.className = `mail-item${msg.seen ? "" : " unread"}`;
     item.dataset.id = msg.id;
-    item.innerHTML = `
-      <span class="mail-item-from">${escapeHtml(msg.from?.address || "unknown")}</span>
-      <span class="mail-item-subject">${escapeHtml(msg.subject || "(no subject)")}</span>
-      <span class="mail-item-date">${formatDate(msg.createdAt)}</span>
-    `;
+    const from = document.createElement("span");
+    from.className = "mail-item-from";
+    from.textContent = msg.from?.address || "unknown";
+    const subject = document.createElement("span");
+    subject.className = "mail-item-subject";
+    subject.textContent = msg.subject || "(no subject)";
+    const date = document.createElement("span");
+    date.className = "mail-item-date";
+    date.textContent = formatDate(msg.createdAt);
+    item.append(from, subject, date);
     item.addEventListener("click", () => openMessage(msg.id));
     mailList.appendChild(item);
   }
@@ -314,9 +319,8 @@ async function openMessage(id) {
     iframe.sandbox = "allow-same-origin";
     iframe.style.cssText = "width:100%;border:none;background:#fff;";
     mailViewBody.appendChild(iframe);
-    iframe.contentDocument.open();
-    iframe.contentDocument.write(cleaned);
-    iframe.contentDocument.close();
+    const blob = new Blob([cleaned], { type: "text/html" });
+    iframe.src = URL.createObjectURL(blob);
     // Auto-resize iframe to fit content
     const resize = () => {
       iframe.style.height = iframe.contentDocument.body.scrollHeight + "px";
@@ -416,20 +420,34 @@ browser.runtime.sendMessage({ action: "getSettings" }).then(({ settings, identit
 function renderHistory(history) {
   historyList.innerHTML = "";
   if (!history || history.length === 0) {
-    historyList.innerHTML = '<div class="history-empty">No history yet</div>';
+    historyList.textContent = "";
+    const emptyDiv = document.createElement("div");
+    emptyDiv.className = "history-empty";
+    emptyDiv.textContent = "No history yet";
+    historyList.appendChild(emptyDiv);
     return;
   }
   for (const item of history) {
     const el = document.createElement("div");
     el.className = "history-item";
-    el.innerHTML = `
-      <div>
-        <span class="history-item-name">${escapeHtml(item.name)}</span>
-        <span class="history-item-email">${escapeHtml(item.email)}</span>
-        ${item.password ? `<span class="history-item-password">${escapeHtml(item.password)}</span>` : ""}
-      </div>
-      <span class="history-item-date">${formatDate(item.date)}</span>
-    `;
+    const infoDiv = document.createElement("div");
+    const nameSpan = document.createElement("span");
+    nameSpan.className = "history-item-name";
+    nameSpan.textContent = item.name;
+    const emailSpan = document.createElement("span");
+    emailSpan.className = "history-item-email";
+    emailSpan.textContent = item.email;
+    infoDiv.append(nameSpan, emailSpan);
+    if (item.password) {
+      const pwSpan = document.createElement("span");
+      pwSpan.className = "history-item-password";
+      pwSpan.textContent = item.password;
+      infoDiv.appendChild(pwSpan);
+    }
+    const dateSpan = document.createElement("span");
+    dateSpan.className = "history-item-date";
+    dateSpan.textContent = formatDate(item.date);
+    el.append(infoDiv, dateSpan);
     historyList.appendChild(el);
   }
 }
